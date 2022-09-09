@@ -1,26 +1,28 @@
 require("dotenv").config();
-const express = require('express');
-const app = express();
-const http = require('http');
-const server = http.createServer(app);
-const { Server } = require("socket.io");
-const io = new Server(server);
+const express = require('express')
+const http = require('http')
+const app = express()
+const server = http.createServer(app)
 
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
-});
+const socketio = require('socket.io')
+const io = socketio(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"]
+  }
+})
 
-io.on('connection', (socket) => {
-  socket.on('chat message', (msg) => {
-    console.log('message: ' + msg);
-  });
-});
+io.on('connection', socket => {
 
-server.listen(process.env.PORT, () => {
-  console.info(`😋🌈 te escucho en el ${process.env.PORT} bb 🦋`);
-});
+  socket.on('connected' , () => {
+    console.log('user connected')
+  })
 
-// const server = require('http').createServer(app);
-// const io = require('socket.io')(server);
-// io.on('connection', () => { /* … */ });
-// server.listen(process.env.SOCKET_PORT);
+  socket.on('message', (name, message) => {
+    io.emit('messages', {name, message})
+  })
+})
+
+server.listen(process.env.PORT || 3001, () => {
+  console.info(`Server with socket opened on ${process.env.PORT} :D`)
+})
